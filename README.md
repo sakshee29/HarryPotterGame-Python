@@ -42,7 +42,7 @@ Run the code by pressing the Run Button on your editor.
 
 Sakshee Tosniwal - [@LinkedIn_url](https://www.linkedin.com/in/sakshee-tosniwal-32a0a8188/) - toshniwalsakshee2002@gmail.com
 
-Project Link: [https://github.com/github_username/repo_name](https://github.com/sakshee29/PythonTokenGame)
+Project Link: [https://github.com/sakshee29/PythonTokenGame](https://github.com/sakshee29/PythonTokenGame)
 
 <p align="right">(<a href="#top">back to top</a>)</p>
 
