@@ -15,7 +15,7 @@ Everytime the function runs, a different dataset is generated thus, tokens are p
 3. Algorithm to perform the winning logic. 
 <!-- 
 [![Program Screen Shot][program-screenshot1]] [![Program Screen Shot][program-screenshot2]] -->
-<img src="https://github.com/sakshee29/PythonTokenGame/blob/main/pythongame.png" alt="Image1" width="500" height="300"/>  <img src="https://github.com/sakshee29/PythonTokenGame/blob/main/pythongame2.png" alt="Image2" width="500" height="300"/>
+<img src="https://github.com/sakshee29/PythonTokenGame/blob/main/pythongame.png" alt="Image1" width="500" height="300"/> <img src="https://github.com/sakshee29/PythonTokenGame/blob/main/pythongame2.png" alt="Image2" width="500" height="300"/>
 
 ### Built With
 
