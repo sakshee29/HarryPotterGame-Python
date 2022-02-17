@@ -1,0 +1,1024 @@
+from turtle import *
+from math import *
+from random import *
+
+# Define constant values for setting up the drawing canvas
+cell_size = 100  # pixels (default is 100)
+num_columns = 7  # cells (default is 7)
+num_rows = 6  # cells (default is 6)
+x_margin = cell_size * 2.75  # pixels, the size of the margin left/right of the board
+y_margin = cell_size // 2  # pixels, the size of the margin below/above the board
+canvas_height = num_rows * cell_size + y_margin * 2
+canvas_width = num_columns * cell_size + x_margin * 2
+
+# Validity checks on board size
+assert cell_size >= 80, 'Cells must be at least 80x80 pixels in size'
+assert num_columns >= 7, 'Board must be at least 7 columns wide'
+assert num_rows >= 6, 'Board must be at least 6 rows high'
+
+#
+#--------------------------------------------------------------------#
+
+
+#-----Functions for Creating the Drawing Canvas----------------------#
+#
+# The functions in this section are called by the main program to
+# manage the drawing canvas for your image.  You should not change
+# any of the code in this section.
+#
+
+# Set up the canvas and draw the background for the overall image
+def create_drawing_canvas(mark_legend_spaces=False,  # show text for legend
+                          mark_axes=True,  # show labels on axes
+                          bg_colour='light grey',  # background colour
+                          line_colour='slate grey'):  # line colour for board
+
+    # Set up the drawing canvas with enough space for the board and
+    # legend
+    setup(canvas_width, canvas_height)
+    bgcolor(bg_colour)
+
+    # Draw as quickly as possible
+    tracer(False)
+
+    # Get ready to draw the board
+    penup()
+    color(line_colour)
+    width(2)
+
+    # Determine the left-bottom coords of the board
+    left_edge = -(num_columns * cell_size) // 2
+    bottom_edge = -(num_rows * cell_size) // 2
+
+    # Draw the horizontal grid lines
+    setheading(0)  # face east
+    for line_no in range(0, num_rows + 1):
+        penup()
+        goto(left_edge, bottom_edge + line_no * cell_size)
+        pendown()
+        forward(num_columns * cell_size)
+
+    # Draw the vertical grid lines
+    setheading(90)  # face north
+    for line_no in range(0, num_columns + 1):
+        penup()
+        goto(left_edge + line_no * cell_size, bottom_edge)
+        pendown()
+        forward(num_rows * cell_size)
+
+    # Mark the centre of the board (coordinate [0, 0])
+    penup()
+    home()
+    dot(10)
+
+    # Optionally label the axes
+    if mark_axes:
+
+        # Define the font and position for the labels
+        small_font = ('Arial', (18 * cell_size) // 100, 'normal')
+        y_offset = (27 * cell_size) // 100  # pixels
+
+        # Draw each of the labels on the x axis
+        penup()
+        for x_label in range(0, num_columns):
+            goto(left_edge + (x_label * cell_size) +
+                 (cell_size // 2), bottom_edge - y_offset)
+            write(chr(x_label + ord('a')), align='center', font=small_font)
+
+        # Draw each of the labels on the y axis
+        penup()
+        x_offset, y_offset = 7, 10  # pixels
+        for y_label in range(0, num_rows):
+            goto(left_edge - x_offset, bottom_edge +
+                 (y_label * cell_size) + (cell_size // 2) - y_offset)
+            write(str(y_label + 1), align='right', font=small_font)
+
+    # Optionally mark the spaces for drawing the legend
+    if mark_legend_spaces:
+        # Font for marking the legend's position
+        big_font = ('MS Serif', (24 * cell_size) // 100, 'normal')
+        # Left side
+        goto(-(num_columns * cell_size) // 2 - 50, -25)
+        write('Put your token\ndescriptions here',
+              align='right', font=big_font)
+        # Right side
+        goto((num_columns * cell_size) // 2 + 50, -25)
+        write('Put your token\ndescriptions here', align='left', font=big_font)
+
+    # Reset everything ready for the student's solution
+    pencolor('black')
+    width(1)
+    penup()
+    home()
+    tracer(True)
+
+
+# End the program and release the drawing canvas to the operating
+# system.  By default the cursor (turtle) is hidden when the
+# program ends.  Call the function with False as the argument to
+# prevent this.
+def release_drawing_canvas(hide_cursor=True):
+    tracer(True)  # ensure any drawing still in progress is displayed
+    if hide_cursor:
+        hideturtle()
+    done()
+
+#
+#--------------------------------------------------------------------#
+
+
+#-----Test Data for Use During Code Development----------------------#
+#
+# The "fixed" data sets in this section are provided to help you
+# develop and test your code.  You can use them as the argument to
+# the "play_game" function while perfecting your solution.  However,
+# they will NOT be used to assess your program.  Your solution will
+# be assessed using the "random_game" function appearing below.
+# Your program must work correctly for any data set that can be
+# generated by the "random_game" function.
+#
+# Each of the data sets is a list of instructions, each specifying
+# in which column to drop a particular type of game token.  The
+# general form of each instruction is
+#
+#     [column, token_type]
+#
+# where the columns range from 'a' to 'g' and the token types
+# range from 1 to 4.
+#
+# Note that the fixed patterns below all assume the board has its
+# default dimensions of 7x6 cells.
+#
+# The following data sets each draw just one token type once
+fixed_game_a0 = [['a', 1]]
+fixed_game_a1 = [['b', 2]]
+fixed_game_a2 = [['c', 3]]
+fixed_game_a3 = [['d', 4]]
+
+# The following data sets each draw just one type
+# of token multiple times
+fixed_game_a4 = [['c', 1], ['f', 1], ['g', 1], ['c', 1]]
+fixed_game_a5 = [['d', 2], ['d', 2], ['a', 2], ['c', 2]]
+fixed_game_a6 = [['c', 3], ['f', 3], ['g', 3], ['c', 3]]
+fixed_game_a7 = [['f', 4], ['f', 4], ['c', 4], ['c', 4]]
+
+# The following small data sets each draw all four kinds
+# of token
+fixed_game_a8 = [['e', 3], ['e', 4], ['f', 3], ['e', 1],
+                 ['c', 2], ['g', 4]]
+fixed_game_a9 = [['g', 3], ['d', 4], ['b', 3], ['e', 1],
+                 ['f', 2], ['g', 4], ['c', 2], ['g', 4]]
+fixed_game_a10 = [['f', 3], ['d', 1], ['c', 3], ['c', 4],
+                  ['e', 2], ['b', 1], ['b', 3]]
+fixed_game_a11 = [['e', 3], ['c', 3], ['d', 3], ['c', 2],
+                  ['c', 3], ['d', 4], ['a', 4], ['f', 1]]
+fixed_game_a12 = [['f', 1], ['b', 4], ['f', 1], ['f', 4],
+                  ['e', 2], ['a', 3], ['c', 3], ['b', 2],
+                  ['a', 2]]
+fixed_game_a13 = [['b', 3], ['f', 4], ['d', 4], ['b', 1],
+                  ['b', 4], ['f', 4], ['b', 2], ['c', 4],
+                  ['d', 3], ['a', 1], ['g', 3]]
+fixed_game_a14 = [['c', 1], ['c', 4], ['g', 2], ['d', 4],
+                  ['d', 1], ['f', 3], ['f', 4], ['f', 1],
+                  ['g', 2], ['c', 2]]
+fixed_game_a15 = [['d', 3], ['d', 4], ['a', 1], ['c', 2],
+                  ['g', 3], ['d', 3], ['g', 1], ['a', 2],
+                  ['a', 2], ['f', 4], ['a', 3], ['c', 2]]
+
+# The following large data sets are each a typical game
+# as generated by the "play_game" function.  (They are
+# divided into five groups whose significance will be
+# revealed in Part B of the assignment.)
+fixed_game_b0_0 = [['d', 4], ['e', 1], ['f', 1], ['d', 1],
+                   ['e', 2], ['c', 3], ['a', 2], ['e', 4],
+                   ['g', 1], ['d', 4], ['a', 2], ['f', 2]]
+fixed_game_b0_1 = [['f', 3], ['a', 2], ['d', 2], ['f', 4],
+                   ['b', 2], ['a', 2], ['f', 3], ['f', 3],
+                   ['e', 1], ['b', 2], ['e', 1], ['c', 1],
+                   ['a', 3], ['d', 3], ['f', 1], ['f', 4],
+                   ['b', 4], ['b', 1], ['c', 4], ['d', 1],
+                   ['a', 3], ['e', 1], ['b', 2], ['c', 3],
+                   ['d', 3], ['c', 2], ['c', 1], ['a', 2],
+                   ['d', 4], ['b', 4], ['g', 2]]
+fixed_game_b0_2 = [['d', 3], ['d', 4], ['a', 4], ['g', 3],
+                   ['d', 2], ['g', 2], ['f', 1], ['b', 2],
+                   ['a', 1], ['a', 3], ['a', 4], ['c', 3],
+                   ['f', 3], ['b', 2], ['c', 3], ['a', 4],
+                   ['g', 1]]
+
+fixed_game_b1_0 = [['e', 3], ['a', 4], ['c', 2], ['f', 1],
+                   ['a', 1], ['c', 4], ['g', 3], ['d', 1],
+                   ['f', 3], ['d', 1], ['f', 1], ['g', 1],
+                   ['e', 3], ['f', 3], ['f', 3], ['e', 4],
+                   ['b', 2], ['a', 2], ['g', 1], ['d', 1],
+                   ['a', 1], ['a', 1]]
+fixed_game_b1_1 = [['f', 3], ['g', 1], ['g', 2], ['b', 1],
+                   ['c', 2], ['c', 2], ['f', 3], ['g', 3],
+                   ['b', 4], ['g', 4], ['d', 4], ['b', 1],
+                   ['e', 3], ['e', 3], ['a', 2], ['c', 1],
+                   ['f', 4], ['f', 3], ['e', 3], ['a', 2],
+                   ['f', 4], ['g', 1], ['f', 4], ['a', 1]]
+fixed_game_b1_2 = [['d', 2], ['f', 1], ['f', 1], ['c', 1],
+                   ['c', 4], ['c', 4], ['d', 1], ['d', 4],
+                   ['b', 2], ['d', 4], ['b', 1], ['d', 3],
+                   ['d', 1], ['a', 1], ['f', 2], ['c', 2],
+                   ['c', 4], ['c', 1], ['g', 1], ['g', 1],
+                   ['g', 4], ['g', 2], ['a', 1], ['g', 1],
+                   ['f', 2], ['e', 4], ['b', 1], ['e', 3],
+                   ['b', 4], ['a', 4], ['b', 1], ['a', 4],
+                   ['f', 2], ['g', 2], ['a', 1], ['f', 4],
+                   ['e', 1], ['b', 4], ['a', 4], ['e', 2],
+                   ['e', 3], ['e', 1]]
+
+fixed_game_b2_0 = [['g', 2], ['d', 2], ['f', 2], ['f', 2],
+                   ['b', 2], ['e', 1], ['d', 1], ['d', 3],
+                   ['e', 1], ['e', 1], ['b', 1], ['b', 1],
+                   ['d', 3], ['f', 3], ['d', 3]]
+fixed_game_b2_1 = [['c', 2], ['g', 3], ['e', 4], ['g', 2],
+                   ['a', 2], ['f', 2], ['f', 2], ['c', 1],
+                   ['d', 2], ['b', 3], ['f', 2], ['d', 4],
+                   ['b', 4], ['e', 2], ['g', 3], ['b', 4],
+                   ['a', 1], ['g', 3], ['f', 1], ['e', 4],
+                   ['d', 3], ['a', 1], ['a', 1], ['d', 2],
+                   ['g', 3], ['d', 2], ['c', 4], ['f', 2],
+                   ['g', 1], ['e', 4], ['f', 3], ['e', 3],
+                   ['e', 3], ['b', 1], ['d', 2], ['c', 1],
+                   ['c', 3]]
+fixed_game_b2_2 = [['e', 2], ['b', 2], ['e', 2], ['g', 2],
+                   ['f', 3], ['e', 3], ['e', 2], ['g', 2],
+                   ['d', 2], ['e', 2], ['a', 1], ['c', 2],
+                   ['e', 2], ['a', 3], ['f', 1], ['a', 3],
+                   ['d', 2], ['g', 3], ['b', 4], ['b', 2],
+                   ['f', 2], ['g', 4], ['d', 3], ['f', 1],
+                   ['d', 3], ['a', 1], ['a', 4], ['g', 1],
+                   ['f', 3], ['b', 3], ['c', 4], ['a', 3],
+                   ['g', 2], ['c', 1], ['f', 3], ['b', 2],
+                   ['b', 4], ['c', 3], ['d', 4], ['c', 4],
+                   ['d', 1], ['c', 1]]
+
+fixed_game_b3_0 = [['b', 2], ['d', 4], ['g', 2], ['e', 3],
+                   ['d', 3], ['f', 4], ['g', 3], ['a', 3],
+                   ['g', 2], ['d', 4], ['g', 4], ['f', 4],
+                   ['a', 4], ['a', 4], ['f', 2], ['b', 1]]
+fixed_game_b3_1 = [['d', 2], ['b', 2], ['e', 4], ['e', 3],
+                   ['d', 3], ['c', 2], ['e', 3], ['b', 4],
+                   ['b', 4], ['d', 4], ['f', 1], ['c', 2],
+                   ['a', 1], ['e', 3], ['b', 4], ['f', 3],
+                   ['c', 3], ['b', 3], ['c', 2], ['b', 2],
+                   ['d', 3], ['e', 4], ['f', 2], ['g', 3],
+                   ['g', 4], ['e', 2], ['c', 1], ['d', 3],
+                   ['d', 1], ['f', 3], ['g', 3], ['f', 3],
+                   ['c', 3], ['g', 4], ['g', 3], ['g', 3]]
+fixed_game_b3_2 = [['a', 2], ['c', 1], ['f', 2], ['d', 2],
+                   ['a', 3], ['c', 2], ['b', 3], ['e', 3],
+                   ['e', 3], ['f', 4], ['a', 1], ['a', 2],
+                   ['b', 1], ['c', 3], ['a', 2], ['c', 2],
+                   ['g', 3], ['g', 3], ['d', 3], ['b', 2],
+                   ['c', 4], ['g', 3], ['f', 3], ['a', 3],
+                   ['f', 2], ['f', 1], ['d', 4], ['d', 4],
+                   ['g', 2], ['e', 3], ['e', 4], ['f', 3],
+                   ['d', 3], ['e', 4], ['g', 4], ['c', 3],
+                   ['d', 1], ['e', 2], ['b', 2], ['b', 1],
+                   ['g', 1]]
+
+fixed_game_b4_0 = [['g', 3], ['f', 3], ['e', 4], ['a', 4],
+                   ['a', 4], ['c', 4], ['e', 3], ['e', 4],
+                   ['a', 4], ['a', 2], ['a', 2], ['c', 4],
+                   ['f', 4], ['d', 4], ['c', 4], ['f', 3],
+                   ['e', 1], ['b', 2], ['c', 2], ['a', 3],
+                   ['g', 4], ['d', 3], ['f', 1], ['f', 2],
+                   ['e', 2], ['d', 1], ['c', 4]]
+fixed_game_b4_1 = [['a', 3], ['d', 4], ['g', 4], ['b', 3],
+                   ['e', 1], ['b', 4], ['e', 3], ['f', 1],
+                   ['f', 4], ['b', 4], ['d', 2], ['e', 4],
+                   ['g', 4], ['d', 2], ['c', 3], ['b', 2],
+                   ['f', 4], ['d', 2], ['b', 2], ['e', 4],
+                   ['c', 3], ['d', 2], ['a', 1], ['e', 1],
+                   ['d', 2], ['g', 1], ['g', 3]]
+fixed_game_b4_2 = [['c', 1], ['c', 4], ['d', 1], ['c', 2],
+                   ['d', 3], ['d', 4], ['g', 3], ['e', 1],
+                   ['g', 4], ['c', 3], ['f', 1], ['b', 4],
+                   ['a', 3], ['c', 4], ['e', 2], ['e', 3],
+                   ['b', 3], ['d', 1], ['c', 3], ['f', 4],
+                   ['e', 1], ['g', 4], ['b', 4], ['g', 3],
+                   ['b', 4], ['b', 3], ['b', 3], ['g', 3],
+                   ['e', 3], ['f', 1], ['e', 1], ['a', 1],
+                   ['a', 4], ['a', 1], ['f', 4], ['f', 2],
+                   ['f', 3], ['d', 1], ['d', 3], ['a', 3],
+                   ['a', 1], ['g', 2]]
+
+# If you want to create your own test data sets put them here,
+# otherwise call function random_game to obtain data sets.
+fixed_game_m1 = [['c', 1], ['f', 3], ['g', 2], ['b', 4]]
+
+#
+#--------------------------------------------------------------------#
+
+
+#-----Function for Assessing Your Solution---------------------------#
+#
+
+# The following function creates a random data set describing a
+# game to draw.  Your program must work for any data set that
+# can be returned by this function.  The results returned by calling
+# this function will be used as the argument to your "play_game"
+# function during marking.  For convenience during code development
+# and marking this function also prints each move in the game to the
+# shell window.  NB: Your code should not print anything else to
+# the shell.  Make sure any debugging calls to the "print" function
+# are disabled before you submit your solution.
+#
+# To maximise the amount of "randomness" the function makes no attempt
+# to give each of the four "players" the same number of turns.  (We
+# assume some other random mechanism, such as rolling a die, determines
+# who gets to drop a token into the board at each turn.)  However the
+# function has been designed so that it will never attempt to overfill
+# a column of the board.  Also, the function will not necessarily
+# generate enough moves to fill every cell in the board.
+#
+def random_game():
+    # Welcoming message
+    print('Welcome to the game!')
+    print('Here are the randomly-generated moves:')
+    # Initialise the list of moves
+    game = []
+    # Keep track of free spaces
+    vacant = [["I'm free!"] * num_rows] * num_columns
+    # Decide how many tokens to insert
+    num_tokens = randint(0, num_rows * num_columns * 1.5)
+    # Drop random tokens into the board, provided they won't
+    # overfill a column
+    for move in range(num_tokens):
+        # Choose a random column and token type
+        column_num = randint(0, num_columns - 1)
+        column = chr(column_num + ord('a'))
+        token = randint(1, 4)
+        # Add the move, provided it won't overfill the board
+        if vacant[column_num] != []:
+            # Display the move
+            print([column, token])
+            # Remember it
+            game.append([column, token])
+            vacant[column_num] = vacant[column_num][1:]
+    # Print a final message and return the completed game
+    print('Game over!')
+    if len(game) == 0:
+        print('Zero moves were generated')
+    elif len(game) == 1:
+        print('Only one move was generated')
+    else:
+        print('There were', len(game), 'moves generated')
+    return game
+
+#
+#--------------------------------------------------------------------#
+
+
+#-----SAKSHEE's Solution---------------------------------------------#
+#
+#  Complete the assignment by replacing the dummy function below with
+#  your own "play_game" function.
+#
+
+# Draw tokens on the board as per the provided data set
+def play_game(game_to_play):
+
+    # Defining to draw all the tokens:
+    def token_1():
+        pencolor('Black')
+        width(4)
+        # choosing color of the square tile:
+        fillcolor('Red')
+        # Initialisation:
+        side = 100
+        begin_fill()
+        for lines in range(4):  # drawing a square
+            forward(side)
+            left(90)
+        end_fill()
+        setheading(90)
+        forward(side)
+
+        # Drawing potter's face:
+        setheading(270)
+        fillcolor('Moccasin')
+        begin_fill()
+        forward(side//2)
+        circle(side//5, 90)
+        forward(60)
+        circle(side//5, 90)
+        forward(side//2)
+        end_fill()
+
+        # Draw the Scarf
+        # a. Going to the position:
+        setheading(270)
+        forward(side)
+        right(90)
+        forward(side)
+        setheading(0)
+        forward(side//5)
+        # b. Drawing alternate yellow lines:
+        for lines in range(4):
+            pendown()
+            width(8)
+            pencolor('Yellow')
+            setheading(90)
+            forward(25)
+            setheading(270)
+            forward(25)
+            penup()
+            setheading(0)
+            forward(side//5)
+
+        # Draw specs and mark:
+        # a. Going to the position:
+        pencolor('Black')
+        width(4)
+        setheading(180)
+        pendown()
+        forward(side)
+        setheading(90)
+        forward(70)
+        setheading(0)
+
+        # b. Making Specs:
+        forward(15)
+        setheading(90)
+        circle(-15)  # glass 1
+        setheading(0)
+        penup()
+        forward(15)
+        pendown()
+        dot(10)  # making the eye
+        penup()
+        forward(15)
+        pendown()
+        forward(10)
+        setheading(90)
+        circle(-15)  # glass 2
+        setheading(0)
+        penup()
+        forward(15)
+        pendown()
+        dot(10)  # making the eye
+        penup()
+        forward(15)
+        pendown()
+        forward(15)
+
+        # a. Making the Scar
+        setheading(180)
+        penup()
+        forward(side)
+        setheading(90)
+        forward(15)
+        setheading(0)
+        forward(8)
+        # starting point of scar
+        setheading(90)
+        pendown()
+        width(2)
+        forward(7)
+        setheading(-45)
+        forward(5)
+        setheading(90)
+        forward(9)
+
+        # Taking cursor back:
+        penup()
+        setheading(180)
+        forward(12)
+        setheading(270)
+        forward(55)
+        setheading(0)
+        forward(45)
+
+        # Making a smile:
+        pendown()
+        circle(20, 60)
+
+    def token_2():
+        setheading(0)
+        pencolor('Black')
+        width(4)
+
+        # Draw the square box:
+        fillcolor('Light Pink')
+        # Initialisation:
+        side = 100
+        begin_fill()
+        for lines in range(4):  # drawing a square
+            forward(side)
+            left(90)
+        end_fill()
+
+        # draw the diary:
+
+        # going the position:
+        width(3)
+        penup()
+        setheading(90)
+        forward(side//5)
+        setheading(0)
+        forward(side//5)
+        pendown()
+
+        # Making a Rectangle 1:
+        fillcolor('Saddle Brown')
+        begin_fill()
+        setheading(90)
+        forward(60)
+        setheading(45)
+        forward(10)
+        setheading(270)
+        forward(72)
+        setheading(135)
+        forward(10)
+        end_fill()
+
+        setheading(-45)
+        forward(10)
+        setheading(0)
+        fillcolor('Sienna')
+        begin_fill()
+        forward(60)
+        setheading(90)
+        forward(72)
+        setheading(180)
+        forward(60)
+        end_fill()
+
+        # gold ends
+        setheading(0)
+        forward(60)
+        setheading(270)
+        forward(30)
+        fillcolor('Gold')
+        begin_fill()
+        setheading(180)
+        forward(60)
+        setheading(270)
+        forward(30)
+        setheading(0)
+        forward(60)
+        end_fill()
+
+    def token_3():
+        # Give a background
+        pencolor('Black')
+        width(4)
+        # choosing color of the square tile:
+        fillcolor('Dark Orchid')
+        # Initialisation:
+        side = 100
+        radius = side//2
+        begin_fill()
+        for lines in range(4):  # drawing a square
+            forward(side)
+            left(90)
+        end_fill()
+
+        # Making the locket:
+        # a. Going to the position:
+        setheading(90)
+        forward(15)
+        penup()
+        setheading(0)
+        forward(35)
+
+        # Ready to draw a circle:
+        pendown()
+        pencolor('Gainsboro')
+        width(5)
+        fillcolor('Goldenrod')
+        begin_fill()
+        for action in range(8):
+            forward(30)
+            left(45)
+        end_fill()
+
+        # drawing circle inside():
+        penup()
+        width(2)
+        forward(15)
+        setheading(90)
+        forward(15)
+        setheading(0)
+        pendown()
+        fillcolor('Light Goldenrod')
+        begin_fill()
+        circle(20)
+        end_fill()
+
+        # Going to text:
+        setheading(90)
+        penup()
+        forward(6)
+        setheading(180)
+        forward(10)
+
+        # write text beneath:
+        slytherin_font = ('Symbol', 5, 'normal')
+        pendown()
+        pencolor('Black')
+        write('Salazar\n locket\nthisis', font=slytherin_font)
+
+    def token_4():
+        setheading(0)
+        # Give a background
+        pencolor('Black')
+        width(4)
+        # choosing color of the square tile:
+        fillcolor('Medium Aquamarine')
+        # Initialisation:
+        side = 100
+        radius = side//2
+        begin_fill()
+        for lines in range(4):  # drawing a square
+            forward(side)
+            left(90)
+        end_fill()
+        # Drawing the Ring:
+        # Draw the diamond at the center:
+        pencolor('Black')
+        width(2)
+        setheading(45)
+        penup()
+        forward(side//2*(sqrt(2)))
+        # Drawing Black and grey triangles:
+        angles = [0, 180]
+        for heading in angles:
+            pendown()
+            # Black Triangle:
+            setheading(heading)
+            fillcolor('Black')
+            begin_fill()
+            forward(side//5)  # 20pixels
+            left(135)
+            forward(side//5*sqrt(2))
+            left(135)
+            forward(side//5)
+            end_fill()
+
+            # Grey Triangle:
+            setheading(heading)
+            fillcolor('Grey')
+            begin_fill()
+            forward(side//5)
+            right(135)
+            forward(side//5*sqrt(2))
+            right(135)
+            forward(side//5)
+            end_fill()
+
+        # Drawing the gold ring:
+        # Taking the cursor to the position of ring
+        width(4)
+        setheading(0)
+        forward(3*side//20)
+        setheading(90)
+        forward(side//20)
+        setheading(0)
+        pencolor('Gold')
+        circle(-25, 290)
+        penup()
+        circle(-25, 60)
+        pendown()
+        circle(-22, 290)
+        pencolor('Black')
+
+    def star(colour):
+        side = 100
+        setheading(144)
+        pencolor(colour)
+        pendown()
+        fillcolor(colour)
+        begin_fill()
+        for action in range(5):
+            forward(3*side//4)
+            right(144)
+        end_fill()
+
+    # Going and drawing tokens on left hand side
+
+    # drawing token 1:
+    penup()
+    goto(-(num_columns * cell_size) // 2 - (cell_size*2),
+         (num_rows * cell_size) // 4)  # Coordinates of top-lefthand
+    pendown()
+    token_1()  # calling function token to draw the token at that place
+    penup()
+    goto(-(num_columns * cell_size) // 2 - (cell_size*2),
+         (num_rows * cell_size) // 4 - 50)  # writing below the token
+    write('Token 1:\nHarry Potter himself', font=('size=10'))
+
+    # drawing token 2:
+    penup()
+    goto(-(num_columns * cell_size) // 2 - (cell_size*2), -
+         (num_rows * cell_size) // 4)  # Coordinates of bottom-lefthand
+    pendown()
+    token_2()  # calling function token to draw the token at that place
+    penup()
+    goto(-(num_columns * cell_size) // 2 -
+         (cell_size*2), -(num_rows * cell_size) // 4 - 50)
+    write("Token 2:\nTom Riddle's Diary", font=('size=10'))
+
+    # Going and drawing tokens on right hand side
+
+    # drawing token 3:
+    penup()
+    goto((num_columns * cell_size) // 2 + (cell_size),
+         (num_rows * cell_size) // 4)  # Coordinates of top-righthand
+    pendown()
+    token_3()  # calling function token to draw the token at that place
+    penup()
+    goto((num_columns * cell_size) // 2 + (cell_size),
+         (num_rows * cell_size) // 4 - 50)
+    write("Token 3:\nSlytherin's locket", font=('size=10'))
+
+    # drawing token 4:
+    penup()
+    goto((num_columns * cell_size) // 2 + (cell_size), -
+         (num_rows * cell_size) // 4)  # Coordinates of bottom-righthand
+    pendown()
+    token_4()  # calling function token to draw the token at that place
+    penup()
+    goto((num_columns * cell_size) // 2 +
+         (cell_size), -(num_rows * cell_size) // 4 - 50)
+    write("Token 4:\nMarvolo Gaunt's ring", font=('size=10'))
+
+    # Defining Coordinates for all columns and rows:
+    coor_x = [-(num_columns * cell_size) // 2 + (cell_size*0), -(num_columns * cell_size) // 2 + (cell_size*1),
+              -(num_columns * cell_size) // 2 + (cell_size*2), -(num_columns *
+                                                                 cell_size) // 2 + (cell_size*3),  # Listing all the coordinates of columns
+              -(num_columns * cell_size) // 2 + (cell_size*4), -(num_columns * \
+                                                                 cell_size) // 2 + (cell_size*5),  # i.e.[-350,-250,-150,-50,50,150,250]
+              -(num_columns * cell_size) // 2 + (cell_size*6)]
+
+    coor_y = [-(num_rows * cell_size) // 2 + (cell_size*0), -(num_rows * cell_size) // 2 + (cell_size*1),  # Listing all the coordinates of rows
+              -(num_rows * cell_size) // 2 + (cell_size*2), -(num_rows * \
+                                                              cell_size) // 2 + (cell_size*3),  # i.e.[-300,-200,-100,0,100,200]
+              -(num_rows * cell_size) // 2 + (cell_size*4), -(num_rows * cell_size) // 2 + (cell_size*5)]
+
+    # List of coordinates of all token blocks of all columns
+    column_a = [(coor_x[0], coor_y[0]), (coor_x[0], coor_y[1]), (coor_x[0], coor_y[2]),
+                (coor_x[0], coor_y[3]), (coor_x[0], coor_y[4]), (coor_x[0], coor_y[5])]
+    column_b = [(coor_x[1], coor_y[0]), (coor_x[1], coor_y[1]), (coor_x[1], coor_y[2]),
+                (coor_x[1], coor_y[3]), (coor_x[1], coor_y[4]), (coor_x[1], coor_y[5])]
+    column_c = [(coor_x[2], coor_y[0]), (coor_x[2], coor_y[1]), (coor_x[2], coor_y[2]),
+                (coor_x[2], coor_y[3]), (coor_x[2], coor_y[4]), (coor_x[2], coor_y[5])]
+    column_d = [(coor_x[3], coor_y[0]), (coor_x[3], coor_y[1]), (coor_x[3], coor_y[2]),
+                (coor_x[3], coor_y[3]), (coor_x[3], coor_y[4]), (coor_x[3], coor_y[5])]
+    column_e = [(coor_x[4], coor_y[0]), (coor_x[4], coor_y[1]), (coor_x[4], coor_y[2]),
+                (coor_x[4], coor_y[3]), (coor_x[4], coor_y[4]), (coor_x[4], coor_y[5])]
+    column_f = [(coor_x[5], coor_y[0]), (coor_x[5], coor_y[1]), (coor_x[5], coor_y[2]),
+                (coor_x[5], coor_y[3]), (coor_x[5], coor_y[4]), (coor_x[5], coor_y[5])]
+    column_g = [(coor_x[6], coor_y[0]), (coor_x[6], coor_y[1]), (coor_x[6], coor_y[2]),
+                (coor_x[6], coor_y[3]), (coor_x[6], coor_y[4]), (coor_x[6], coor_y[5])]
+
+    # List to store coordinates of first token entered:
+    first_a = []
+    first_b = []
+    first_c = []
+    first_d = []
+    first_e = []
+    first_f = []
+    first_g = []
+
+    # List to store coordiates of last rows of every column:
+    last_a = []
+    last_b = []
+    last_c = []
+    last_d = []
+    last_e = []
+    last_f = []
+    last_g = []
+
+    for location, token in game_to_play:  # for loop used to run the game for every random move generated
+        # game_to_play refers to random_game or fixed_game
+
+        penup()  # lifting penup so we don't draw connecting lines
+        # Goto column a
+        if location == 'a':
+            # If first row of column a is empty
+            if first_a == []:
+                goto(column_a[0])
+                # appending value in list
+                first_a.append(column_a[0])
+            else:
+                # if first row filled, this part runs
+                last_a = []
+                # starts the list from a row above so tokens don't overlap
+                column_a = column_a[1:]
+                goto(column_a[0])
+                # store the last column and token visited
+                last_a.append((column_a[0], token))
+
+        # (Rest is similar process as column a for every column)
+        # Goto column b
+        if location == 'b':
+            if first_b == []:
+                goto(column_b[0])
+                first_b.append(column_b[0])
+            else:
+                last_b = []
+                column_b = column_b[1:]
+                goto(column_b[0])
+                last_b.append((column_b[0], token))
+
+        # Goto column c
+        if location == 'c':
+
+            if first_c == []:
+                goto(column_c[0])
+                first_c.append(column_c[0])
+            else:
+                last_c = []
+                column_c = column_c[1:]
+                goto(column_c[0])
+                last_c.append((column_c[0], token))
+
+        # Goto column d
+        if location == 'd':
+            if first_d == []:
+                goto(column_d[0])
+                first_d.append(column_d[0])
+            else:
+                last_d = []
+                column_d = column_d[1:]
+                goto(column_d[0])
+                last_d.append((column_d[0], token))
+
+        # Goto column e
+        if location == 'e':
+            if first_e == []:
+                goto(column_e[0])
+                first_e.append(column_e[0])
+            else:
+                last_e = []
+                column_e = column_e[1:]
+                goto(column_e[0])
+                last_e.append((column_e[0], token))
+
+        # Goto column f
+        if location == 'f':
+            if first_f == []:
+                goto(column_f[0])
+                first_f.append(column_f[0])
+            else:
+                last_f = []
+                column_f = column_f[1:]
+                goto(column_f[0])
+                last_f.append((column_f[0], token))
+
+        # Goto column g
+        if location == 'g':
+            if first_g == []:
+                goto(column_g[0])
+                first_g.append(column_g[0])
+            else:
+                last_g = []
+                column_g = column_g[1:]
+                goto(column_g[0])
+                last_g.append((column_g[0], token))
+
+        pendown()
+        setheading(0)  # draws intact
+        # Goes to particular location and draw particular token
+        if token == 1:
+            token_1()
+        if token == 2:
+            token_2()
+        if token == 3:
+            token_3()
+        if token == 4:
+            token_4()
+
+        winner = []  # empty list to store winning token
+
+        def winning_token():
+            # list of the last row of each column with token
+            last_rows = [last_a, last_b, last_c,
+                         last_d, last_e, last_f, last_g]
+            last_tokens = []  # tokens placed in last row
+
+            for rows in last_rows:
+                for tokens in rows:
+                    last_tokens.append(tokens[1])
+
+                    # if number of tokens in the list last tokens>=4 function runs
+                    if last_tokens.count(1) >= 4:
+                        # and following token is declared winner
+                        print("Token 1 wins")
+                        penup()
+                        goto(-(num_columns * cell_size) // 2 - (cell_size*1),
+                             (num_rows * cell_size) // 4+75)  # goes to draw star
+                        star('Gold')  # draws a gold star for the winner
+                        winner.append('1')  # adds winner to the empty list
+
+                    # similar process for each token as above(token 1)
+                    elif last_tokens.count(2) >= 4:
+                        print("Token 2 wins")
+                        penup()
+                        goto(-(num_columns * cell_size) // 2 -
+                             (cell_size*1), -(num_rows * cell_size) // 4+75)
+                        star('Gold')
+                        winner.append('2')
+
+                    elif last_tokens.count(3) >= 4:
+                        print("Token 3 wins")
+                        penup()
+                        goto((num_columns * cell_size) // 2 +
+                             (cell_size*2), (num_rows * cell_size) // 4+75)
+                        star('Gold')
+                        winner.append('3')
+
+                    elif last_tokens.count(4) >= 4:
+                        print("Token 4 wins")
+                        penup()
+                        goto((num_columns * cell_size) // 2 +
+                             (cell_size*2), -(num_rows * cell_size) // 4+75)
+                        star('Gold')
+                        winner.append('4')
+
+        winning_token()  # calling the function to choose winner
+        if winner != []:  # Any token in the list, is the winner
+            return winner
+
+    # If no token appeared 4 or more than 4 times
+    print("It's a tie, Everybody Wins")
+    # Print White stars on all tokens:
+    # token 1:
+    penup()
+    goto(-(num_columns * cell_size) // 2 - (cell_size*1),
+         (num_rows * cell_size) // 4+75)  # position to print the star
+    star('White')
+
+    # token 2:
+    penup()
+    goto(-(num_columns * cell_size) // 2 - (cell_size*1), -
+         (num_rows * cell_size) // 4+75)  # position to print the star
+    star('White')
+
+    # token 3:
+    penup()
+    goto((num_columns * cell_size) // 2 + (cell_size*2),
+         (num_rows * cell_size) // 4+75)  # position to print the star
+    star('White')
+
+    # token 4:
+    penup()
+    goto((num_columns * cell_size) // 2 + (cell_size*2), -
+         (num_rows * cell_size) // 4+75)  # position to print the star
+    star('White')
+
+
+#
+#--------------------------------------------------------------------#
+
+
+#-----Main Program---------------------------------------------------#
+#
+# This main program sets up the background, ready for you to start
+# drawing your solution.  Do not change any of this code except
+# as indicated by the comments marked '*****'.
+#
+# Set up the drawing canvas
+# ***** You can change the background and line colours, and choose
+# ***** whether or not to label the axes and mark the places for the
+# ***** legend, by providing arguments to this function call
+create_drawing_canvas()
+
+# Control the drawing speed
+# ***** Change the following argument if you want to adjust
+# ***** the drawing speed
+speed('fastest')
+
+# Decide whether or not to show the drawing step-by-step
+# ***** Set the following argument to False if you don't want to wait
+# ***** forever while the cursor moves slowly around the screen
+tracer(False)
+
+# Give the drawing canvas a title
+# ***** Replace this title with a description of your solution's
+# ***** theme and its tokens
+title('Harry Potter and Horcruxes')
+
+# Call the student's function to play the game
+# ***** While developing your program you can call the "play_game"
+# ***** function with one of the "fixed" data sets, but your
+# ***** final solution must work with "random_game()" as the
+# ***** argument.  Your "play_game" function must work for any data
+# ***** set that can be returned by the "random_game" function.
+# play_game(fixed_game_b2_2) # <-- use this for code development only
+play_game(random_game())  # <-- this will be used for assessment
+
+# Exit gracefully
+# ***** Change the default argument to False if you want the
+# ***** cursor (turtle) to remain visible at the end of the
+# ***** program as a debugging aid
+release_drawing_canvas()
+
+#
+#--------------------------------------------------------------------#
