@@ -13,8 +13,9 @@ Everytime the function runs, a different dataset is generated thus, tokens are p
 1. Drawing 4 different Tokens using turtle graphics.
 2. Interpreting the dataset to exactly place the tokens in the current position. 
 3. Algorithm to perform the winning logic. 
-
-[![Program Screen Shot][program-screenshot]] [![Program Screen Shot][program-screenshot]]
+<!-- 
+[![Program Screen Shot][program-screenshot1]] [![Program Screen Shot][program-screenshot2]] -->
+<img src="https://github.com/sakshee29/PythonTokenGame/blob/main/pythongame.png" alt="Image1" width="500" height="300"/>  <img src="https://github.com/sakshee29/PythonTokenGame/blob/main/pythongame2.png" alt="Image2" width="500" height="300"/>
 
 ### Built With
 
@@ -48,4 +49,5 @@ Project Link: [https://github.com/github_username/repo_name](https://github.com/
 
 
 <!-- IMAGES -->
-[program-screenshot]: images/screenshot.png
+[program-screenshot1]: pythongame.png
+[program-screenshot2]: pythongame2.png
