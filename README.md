@@ -1,4 +1,4 @@
-# PythonTokenGame
+# HarryPotterGame - Python
 
 
 <!-- ABOUT THE PROJECT -->
